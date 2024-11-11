@@ -1,0 +1,189 @@
+class Word {
+    public id: number;
+    public word: string;
+    public description: string;
+
+    constructor(id: number, word: string, description: string) {
+        this.id = id;
+        this.word = word;
+        this.description = description;
+    }
+}
+
+class NodeRBT {
+    private data: Word;
+    private father!: NodeRBT;
+    private leftChild!: NodeRBT;
+    private rightChild!: NodeRBT;
+    private color: string;
+
+    constructor(data: Word, isLeaf?: boolean) {
+        this.data = data;
+        this.color = "RED";
+        if (isLeaf) this.color = "BLACK";
+    }
+
+    public getData(): Word {
+        return this.data;
+    }
+
+    public setFather(newFather: NodeRBT): void {
+        this.father = newFather;
+    }
+
+    public getFather(): NodeRBT {
+        return this.father;
+    }
+
+    public setLeftChild(newChild: NodeRBT): void {
+        this.leftChild = newChild;
+    }
+
+    public getLeftChild(): NodeRBT {
+        return this.leftChild;
+    }
+
+    public setRightChild(newChild: NodeRBT): void {
+        this.rightChild = newChild;
+    }
+
+    public getRightChild(): NodeRBT {
+        return this.rightChild;
+    }
+
+    public setNodeAsRed(): void {
+        this.color = "RED";
+    }
+
+    public setNodeAsBlack(): void {
+        this.color = "BLACK";
+    }
+
+    public getColor(): string {
+        return this.color;
+    }
+}
+
+class RBTree {
+    private root: NodeRBT;
+    private leaf: NodeRBT;
+
+    constructor() {
+        this.leaf = new NodeRBT(new Word(0, "", ""), true);
+        this.root = this.leaf;
+    }
+
+    // Inserta una nueva palabra en el árbol
+    public insert(word: Word): void {
+        let newNode: NodeRBT = new NodeRBT(word);
+        let parent: NodeRBT = this.leaf;
+        let current: NodeRBT = this.root;
+
+        newNode.setLeftChild(this.leaf);
+        newNode.setRightChild(this.leaf);
+
+        while (current !== this.leaf) {
+            parent = current;
+            if (newNode.getData().id < current.getData().id) {
+                current = current.getLeftChild();
+            } else {
+                current = current.getRightChild();
+            }
+        }
+
+        newNode.setFather(parent);
+        if (parent === this.leaf) {
+            this.root = newNode;
+        } else if (newNode.getData().id < parent.getData().id) {
+            parent.setLeftChild(newNode);
+        } else {
+            parent.setRightChild(newNode);
+        }
+
+        this.fixInsert(newNode);
+    }
+
+    // Buscar palabra por ID
+    public searchByID(id: number): void {
+        let node = this.search(id);
+        if (node) {
+            console.log(`ID: ${node.getData().id}, Word: ${node.getData().word}, Description: ${node.getData().description}`);
+            this.delete(id); // elimina la palabra después de mostrarla
+        } else {
+            console.log(`ID ${id} not found.`);
+        }
+    }
+
+    // Buscar palabras por letra inicial
+    public searchByLetter(letter: string): void {
+        this.printWordsByLetter(this.root, letter.toLowerCase());
+    }
+
+    private printWordsByLetter(node: NodeRBT, letter: string): void {
+        if (node === this.leaf) return;
+
+        this.printWordsByLetter(node.getLeftChild(), letter);
+        if (node.getData().word.toLowerCase().startsWith(letter)) {
+            console.log(`ID: ${node.getData().id}, Word: ${node.getData().word}, Description: ${node.getData().description}`);
+        }
+        this.printWordsByLetter(node.getRightChild(), letter);
+    }
+
+    // Imprimir palabras en orden descendente por ID
+    public printInDescendingOrder(): void {
+        this.printInOrderDescending(this.root);
+    }
+
+    private printInOrderDescending(node: NodeRBT): void {
+        if (node === this.leaf) return;
+
+        this.printInOrderDescending(node.getRightChild());
+        console.log(`ID: ${node.getData().id}, Word: ${node.getData().word}, Description: ${node.getData().description}`);
+        this.printInOrderDescending(node.getLeftChild());
+    }
+
+    // Métodos internos (fixInsert, fixDelete, rotate, etc.) deben adaptarse si es necesario
+    // Ejemplo:
+    private fixInsert(testNode: NodeRBT): void {
+        // Aquí el código de balanceo de inserción como en el ejemplo original
+        // ...
+    }
+
+    private delete(id: number): void {
+        // Aquí el código de eliminación como en el ejemplo original
+        // ...
+    }
+
+    private search(id: number): NodeRBT | null {
+        let current: NodeRBT = this.root;
+
+        while (current !== this.leaf) {
+            if (id === current.getData().id) {
+                return current;
+            } else if (id < current.getData().id) {
+                current = current.getLeftChild();
+            } else {
+                current = current.getRightChild();
+            }
+        }
+
+        return null;
+    }
+}
+
+// Ejemplo de uso
+const rbTree = new RBTree();
+rbTree.insert(new Word(5, "DevOps", "Conjunto de prácticas que combinan el desarrollo y las operaciones"));
+rbTree.insert(new Word(3, "Algoritmo", "Conjunto de instrucciones para resolver un problema"));
+rbTree.insert(new Word(7, "Base de Datos", "Colección organizada de datos almacenados y accesibles electrónicamente"));
+rbTree.insert(new Word(1, "Bug", "Error o fallo en un programa"));
+rbTree.insert(new Word(9, "Compilador", "Programa que traduce código de alto nivel a lenguaje de máquina"));
+
+console.log("Buscar palabra por ID (ID = 3):");
+rbTree.searchByID(3);
+
+console.log("\nBuscar palabras que inicien con 'B':");
+rbTree.searchByLetter("B");
+
+console.log("\nImprimir palabras en orden descendente por ID:");
+rbTree.printInDescendingOrder();
