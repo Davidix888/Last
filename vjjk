@@ -1,0 +1,253 @@
+class Word {
+    public id: number;
+    public word: string;
+    public description: string;
+
+    constructor(id: number, word: string, description: string) {
+        this.id = id;
+        this.word = word;
+        this.description = description;
+    }
+}
+
+class NodeRBT {
+    private data: Word;
+    private father!: NodeRBT;
+    private leftChild!: NodeRBT;
+    private rightChild!: NodeRBT;
+    private color: string;
+
+    constructor(data: Word, isLeaf?: boolean) {
+        this.data = data;
+        this.color = "RED";
+        if (isLeaf) this.color = "BLACK";
+    }
+
+    public getData(): Word {
+        return this.data;
+    }
+
+    public setFather(newFather: NodeRBT): void {
+        this.father = newFather;
+    }
+
+    public getFather(): NodeRBT {
+        return this.father;
+    }
+
+    public setLeftChild(newChild: NodeRBT): void {
+        this.leftChild = newChild;
+    }
+
+    public getLeftChild(): NodeRBT {
+        return this.leftChild;
+    }
+
+    public setRightChild(newChild: NodeRBT): void {
+        this.rightChild = newChild;
+    }
+
+    public getRightChild(): NodeRBT {
+        return this.rightChild;
+    }
+
+    public setNodeAsRed(): void {
+        this.color = "RED";
+    }
+
+    public setNodeAsBlack(): void {
+        this.color = "BLACK";
+    }
+
+    public getColor(): string {
+        return this.color;
+    }
+}
+
+class RBTree {
+    private root: NodeRBT;
+    private leaf: NodeRBT;
+
+    constructor() {
+        this.leaf = new NodeRBT(new Word(0, "", ""), true);
+        this.root = this.leaf;
+    }
+
+    public insert(word: Word): void {
+        let newNode: NodeRBT = new NodeRBT(word);
+        let parent: NodeRBT = this.leaf;
+        let current: NodeRBT = this.root;
+
+        newNode.setLeftChild(this.leaf);
+        newNode.setRightChild(this.leaf);
+
+        while (current !== this.leaf) {
+            parent = current;
+            if (newNode.getData().id < current.getData().id) {
+                current = current.getLeftChild();
+            } else {
+                current = current.getRightChild();
+            }
+        }
+
+        newNode.setFather(parent);
+        if (parent === this.leaf) {
+            this.root = newNode;
+        } else if (newNode.getData().id < parent.getData().id) {
+            parent.setLeftChild(newNode);
+        } else {
+            parent.setRightChild(newNode);
+        }
+
+        this.fixInsert(newNode);
+    }
+
+    private fixInsert(testNode: NodeRBT): void {
+        while (testNode !== this.root && testNode.getFather().getColor() == "RED") {
+            if (testNode.getFather() === testNode.getFather().getFather().getLeftChild()) {
+                let uncle: NodeRBT = testNode.getFather().getFather().getRightChild();
+                if (uncle.getColor() === "RED") {
+                    testNode.getFather().setNodeAsBlack();
+                    uncle.setNodeAsBlack();
+                    testNode.getFather().getFather().setNodeAsRed();
+                    testNode = testNode.getFather().getFather();
+                } else {
+                    if (testNode === testNode.getFather().getRightChild()) {
+                        testNode = testNode.getFather();
+                        this.leftRotate(testNode);
+                    }
+                    testNode.getFather().setNodeAsBlack();
+                    testNode.getFather().getFather().setNodeAsRed();
+                    this.rightRotate(testNode.getFather().getFather());
+                }
+            } else {
+                let uncle: NodeRBT = testNode.getFather().getFather().getLeftChild();
+                if (uncle.getColor() === "RED") {
+                    testNode.getFather().setNodeAsBlack();
+                    uncle.setNodeAsBlack();
+                    testNode.getFather().getFather().setNodeAsRed();
+                    testNode = testNode.getFather().getFather();
+                } else {
+                    if (testNode === testNode.getFather().getLeftChild()) {
+                        testNode = testNode.getFather();
+                        this.rightRotate(testNode);
+                    }
+                    testNode.getFather().setNodeAsBlack();
+                    testNode.getFather().getFather().setNodeAsRed();
+                    this.leftRotate(testNode.getFather().getFather());
+                }
+            }
+        }
+        this.root.setNodeAsBlack();
+    }
+
+    private leftRotate(x: NodeRBT): void {
+        let y: NodeRBT = x.getRightChild();
+        x.setRightChild(y.getLeftChild());
+        if (y.getLeftChild() != this.leaf) y.getLeftChild().setFather(x);
+        y.setFather(x.getFather());
+        if (x.getFather() == this.leaf) {
+            this.root = y;
+        } else if (x === x.getFather().getLeftChild()) {
+            x.getFather().setLeftChild(y);
+        } else {
+            x.getFather().setRightChild(y);
+        }
+        y.setLeftChild(x);
+        x.setFather(y);
+    }
+
+    private rightRotate(x: NodeRBT): void {
+        let y: NodeRBT = x.getLeftChild();
+        x.setLeftChild(y.getRightChild());
+        if (y.getRightChild() != this.leaf) y.getRightChild().setFather(x);
+        y.setFather(x.getFather());
+        if (x.getFather() == this.leaf) {
+            this.root = y;
+        } else if (x === x.getFather().getRightChild()) {
+            x.getFather().setRightChild(y);
+        } else {
+            x.getFather().setLeftChild(y);
+        }
+        y.setRightChild(x);
+        x.setFather(y);
+    }
+
+    public searchByID(id: number): void {
+        let node = this.search(id);
+        if (node) {
+            console.log(`ID: ${node.getData().id}, Word: ${node.getData().word}, Description: ${node.getData().description}`);
+            this.delete(id);
+        } else {
+            console.log(`ID ${id} not found.`);
+        }
+    }
+
+    private search(id: number): NodeRBT | null {
+        let current: NodeRBT = this.root;
+
+        while (current !== this.leaf) {
+            if (id === current.getData().id) {
+                return current;
+            } else if (id < current.getData().id) {
+                current = current.getLeftChild();
+            } else {
+                current = current.getRightChild();
+            }
+        }
+
+        return null;
+    }
+
+    public searchByLetter(letter: string): void {
+        this.printWordsByLetter(this.root, letter.toLowerCase());
+    }
+
+    private printWordsByLetter(node: NodeRBT, letter: string): void {
+        if (node === this.leaf) return;
+
+        this.printWordsByLetter(node.getLeftChild(), letter);
+        if (node.getData().word.toLowerCase().startsWith(letter)) {
+            console.log(`ID: ${node.getData().id}, Word: ${node.getData().word}, Description: ${node.getData().description}`);
+        }
+        this.printWordsByLetter(node.getRightChild(), letter);
+    }
+
+    public printInDescendingOrder(): void {
+        this.printInOrderDescending(this.root);
+    }
+
+    private printInOrderDescending(node: NodeRBT): void {
+        if (node === this.leaf) return;
+
+        this.printInOrderDescending(node.getRightChild());
+        console.log(`ID: ${node.getData().id}, Word: ${node.getData().word}, Description: ${node.getData().description}`);
+        this.printInOrderDescending(node.getLeftChild());
+    }
+
+    private delete(id: number): void {
+        // Implementación de eliminación y balanceo de árbol al eliminar un nodo
+        // Similar al método delete en tu código anterior.
+    }
+
+    private fixDelete(x: NodeRBT): void {
+        // Implementación de balanceo en el árbol luego de una eliminación.
+    }
+}
+
+// Ejemplo de uso
+const rbTree = new RBTree();
+rbTree.insert(new Word(5, "DevOps", "Conjunto de prácticas que combinan el desarrollo y las operaciones"));
+rbTree.insert(new Word(3, "Algoritmo", "Conjunto de instrucciones para resolver un problema"));
+rbTree.insert(new Word(7, "Base de Datos", "Colección organizada de datos almacenados y accesibles electrónicamente"));
+rbTree.insert(new Word(1, "Bug", "Error o fallo en un programa"));
+rbTree.insert(new Word(9, "Compilador", "Programa que traduce código de alto nivel a lenguaje de máquina"));
+
+console.log("Buscar palabra por ID (ID = 3):");
+rbTree.searchByID(3);
+
+console.log("\nBuscar palabras que inicien con 'B':");
+rbTree.searchByLetter("B");
+
+console.log("\nImprimir palabras en orden descendente por ID:");
+rbTree.printInDescendingOrder();
