@@ -352,3 +352,114 @@ if (node_search !== null) {
 
 console.log("Eliminando nodo...")
 myRBTree.delete(8);
+private delete(id: number): void {
+    let nodeToDelete = this.search(id);
+    if (nodeToDelete === null) {
+        console.log("El nodo no existe en el árbol");
+        return;
+    }
+
+    let y = nodeToDelete;
+    let yOriginalColor = y.getColor();
+    let x: NodeRBT;
+
+    if (nodeToDelete.getLeftChild() === this.leaf) {
+        x = nodeToDelete.getRightChild();
+        this.rotate(nodeToDelete, nodeToDelete.getRightChild());
+    } else if (nodeToDelete.getRightChild() === this.leaf) {
+        x = nodeToDelete.getLeftChild();
+        this.rotate(nodeToDelete, nodeToDelete.getLeftChild());
+    } else {
+        y = this.getMin(nodeToDelete.getRightChild());
+        yOriginalColor = y.getColor();
+        x = y.getRightChild();
+        if (y.getFather() === nodeToDelete) {
+            x.setFather(y);
+        } else {
+            this.rotate(y, y.getRightChild());
+            y.setRightChild(nodeToDelete.getRightChild());
+            y.getRightChild().setFather(y);
+        }
+        this.rotate(nodeToDelete, y);
+        y.setLeftChild(nodeToDelete.getLeftChild());
+        y.getLeftChild().setFather(y);
+        y.setNodeAsBlack();
+    }
+
+    if (yOriginalColor === "BLACK") {
+        this.fixDelete(x);
+    }
+}
+
+private fixDelete(x: NodeRBT): void {
+    while (x !== this.root && x.getColor() === "BLACK") {
+        if (x === x.getFather().getLeftChild()) {
+            let w = x.getFather().getRightChild();
+            if (w.getColor() === "RED") {
+                w.setNodeAsBlack();
+                x.getFather().setNodeAsRed();
+                this.leftRotate(x.getFather());
+                w = x.getFather().getRightChild();
+            }
+            if (w.getLeftChild().getColor() === "BLACK" && w.getRightChild().getColor() === "BLACK") {
+                w.setNodeAsRed();
+                x = x.getFather();
+            } else {
+                if (w.getRightChild().getColor() === "BLACK") {
+                    w.getLeftChild().setNodeAsBlack();
+                    w.setNodeAsRed();
+                    this.rightRotate(w);
+                    w = x.getFather().getRightChild();
+                }
+                w.setColor("BLACK");
+                x.getFather().setColor("BLACK");
+                w.getRightChild().setColor("BLACK");
+                this.leftRotate(x.getFather());
+                x = this.root;
+            }
+        } else {
+            let w = x.getFather().getLeftChild();
+            if (w.getColor() === "RED") {
+                w.setNodeAsBlack();
+                x.getFather().setNodeAsRed();
+                this.rightRotate(x.getFather());
+                w = x.getFather().getLeftChild();
+            }
+            if (w.getRightChild().getColor() === "BLACK" && w.getLeftChild().getColor() === "BLACK") {
+                w.setNodeAsRed();
+                x = x.getFather();
+            } else {
+                if (w.getLeftChild().getColor() === "BLACK") {
+                    w.getRightChild().setNodeAsBlack();
+                    w.setNodeAsRed();
+                    this.leftRotate(w);
+                    w = x.getFather().getLeftChild();
+                }
+                w.setNodeAsBlack();
+                x.getFather().setNodeAsBlack();
+                w.getLeftChild().setNodeAsBlack();
+                this.rightRotate(x.getFather());
+                x = this.root;
+            }
+        }
+    }
+    x.setNodeAsBlack();
+}
+
+private rotate(testNode: NodeRBT, currentNode: NodeRBT): void {
+    if (testNode.getFather() === this.leaf) {
+        this.root = currentNode;
+    } else if (testNode === testNode.getFather().getLeftChild()) {
+        testNode.getFather().setLeftChild(currentNode);
+    } else {
+        testNode.getFather().setRightChild(currentNode);
+    }
+    currentNode.setFather(testNode.getFather());
+}
+
+private getMin(node: NodeRBT): NodeRBT {
+    while (node.getLeftChild() !== this.leaf) {
+        node = node.getLeftChild();
+    }
+    return node;
+}
